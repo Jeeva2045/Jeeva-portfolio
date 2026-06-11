@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeeva A — Video Editor & Visual Storyteller</title>
+<meta name="description" content="Jeeva A is a video editor specializing in cinematic reels, YouTube content, and brand storytelling for agencies and creators.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --bg-soft: #131315;
+    --bg-card: #18181b;
+    --line: rgba(244,241,234,0.08);
+    --text: #f4f1ea;
+    --muted: #8c8c92;
+    --gold: #d6a44c;
+    --rust: #d8542f;
+    --display: 'Anton', sans-serif;
+    --body: 'Sora', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--gold);color:#0a0a0b;}
+
+  a{color:inherit;text-decoration:none;}
+  img,video{display:block;max-width:100%;}
+
+  /* Film grain overlay */
+  .grain{
+    position:fixed; inset:0; z-index:9000; pointer-events:none;
+    opacity:.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Letterbox cinematic bars */
+  .letterbox{
+    position:fixed; left:0; right:0; height:5vh; background:#000; z-index:500;
+    pointer-events:none; transition:height 1.4s cubic-bezier(.77,0,.18,1);
+  }
+  .letterbox.top{top:0;}
+  .letterbox.bottom{bottom:0;}
+  body.loaded .letterbox{height:0;}
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  :focus-visible{outline:2px solid var(--gold); outline-offset:3px;}
+
+  .wrap{max-width:1240px; margin:0 auto; padding:0 32px;}
+  @media(max-width:640px){.wrap{padding:0 20px;}}
+
+  /* ---------- NAV ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:800;
+    padding:22px 0; transition:background .4s ease, padding .4s ease, border-color .4s ease;
+    border-bottom:1px solid transparent;
+  }
+  header.scrolled{
+    background:rgba(10,10,11,0.78); backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px); padding:14px 0;
+    border-bottom:1px solid var(--line);
+  }
+  nav{display:flex; align-items:center; justify-content:space-between;}
+  .logo{
+    font-family:var(--display); font-size:1.45rem; letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .logo span{color:var(--gold);}
+  .nav-links{display:flex; gap:34px; list-style:none;}
+  .nav-links a{
+    font-size:.82rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); position:relative; padding-bottom:4px; transition:color .3s ease;
+  }
+  .nav-links a::after{
+    content:''; position:absolute; left:0; bottom:0; width:0; height:1px;
+    background:var(--gold); transition:width .35s ease;
+  }
+  .nav-links a:hover{color:var(--text);}
+  .nav-links a:hover::after{width:100%;}
+  .nav-cta{
+    font-size:.78rem; letter-spacing:.14em; text-transform:uppercase;
+    border:1px solid var(--line); padding:10px 22px; border-radius:2px;
+    transition:border-color .3s ease, background .3s ease;
+  }
+  .nav-cta:hover{border-color:var(--gold); background:rgba(214,164,76,.08);}
+  .nav-toggle{display:none; flex-direction:column; gap:5px; cursor:pointer; background:none; border:none; padding:6px;}
+  .nav-toggle span{display:block; width:24px; height:2px; background:var(--text);}
+
+  @media(max-width:880px){
+    .nav-links, .nav-cta{display:none;}
+    .nav-toggle{display:flex;}
+    .nav-links.open{
+      display:flex; flex-direction:column; gap:0; position:fixed; top:64px; left:0; right:0;
+      background:rgba(10,10,11,0.97); backdrop-filter:blur(14px); padding:10px 24px 28px;
+      border-bottom:1px solid var(--line);
+    }
+    .nav-links.open a{padding:14px 0; border-bottom:1px solid var(--line); width:100%;}
+    .nav-links.open .nav-cta-mobile{display:block; margin-top:14px;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100vh; display:flex; flex-direction:column; justify-content:flex-end;
+    position:relative; padding:160px 0 60px;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(214,164,76,0.10), transparent 60%),
+      linear-gradient(180deg, #0a0a0b 0%, #0c0c0e 60%, #0a0a0b 100%);
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .hero-bg-grid{
+    position:absolute; inset:0; z-index:0; opacity:.35;
+    background-image:
+      linear-gradient(rgba(244,241,234,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(244,241,234,.04) 1px, transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 75%);
+  }
+  .hero-reel{
+    position:absolute; top:18%; right:-120px; width:420px; height:420px;
+    border:1px solid var(--line); border-radius:50%; opacity:.5;
+    animation:spin 60s linear infinite;
+  }
+  .hero-reel::before{
+    content:''; position:absolute; inset:60px; border:1px solid var(--line); border-radius:50%;
+  }
+  .hero-reel::after{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    background:
+      radial-gradient(circle 8px at 50% 6%, var(--gold) 99%, transparent 100%),
+      radial-gradient(circle 8px at 50% 94%, rgba(244,241,234,.18) 99%, transparent 100%),
+      radial-gradient(circle 8px at 6% 50%, rgba(244,241,234,.18) 99%, transparent 100%),
+      radial-gradient(circle 8px at 94% 50%, rgba(244,241,234,.18) 99%, transparent 100%);
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .hero-content{position:relative; z-index:2;}
+  .hero-eyebrow{
+    display:flex; align-items:center; gap:14px; font-family:var(--mono);
+    font-size:.78rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted);
+    margin-bottom:28px; opacity:0; animation:riseIn .9s ease forwards .15s;
+  }
+  .hero-eyebrow .dot{width:8px; height:8px; border-radius:50%; background:var(--rust); animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.25;}}
+
+  .hero h1{
+    font-family:var(--display); text-transform:uppercase;
+    font-size:clamp(3.4rem, 11vw, 8.5rem); line-height:.96; letter-spacing:.01em;
+    overflow:hidden;
+  }
+  .hero h1 .line{display:block; overflow:hidden;}
+  .hero h1 .line span{
+    display:block; transform:translateY(110%); animation:riseIn 1s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero h1 .line:nth-child(1) span{animation-delay:.25s;}
+  .hero h1 .line:nth-child(2) span{animation-delay:.4s; color:var(--gold);}
+
+  @keyframes riseIn{to{transform:translateY(0); opacity:1;}}
+
+  .hero-tagline{
+    margin-top:28px; max-width:540px; font-size:1.05rem; line-height:1.75; color:var(--muted);
+    opacity:0; animation:riseIn .9s ease forwards .65s;
+  }
+  .hero-actions{
+    margin-top:42px; display:flex; gap:18px; flex-wrap:wrap;
+    opacity:0; animation:riseIn .9s ease forwards .8s;
+  }
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:.85rem; letter-spacing:.1em;
+    text-transform:uppercase; padding:17px 34px; border-radius:2px;
+    display:inline-flex; align-items:center; gap:10px; position:relative; overflow:hidden;
+    transition:transform .35s ease, color .35s ease, border-color .35s ease;
+  }
+  .btn-primary{background:var(--gold); color:#0a0a0b;}
+  .btn-primary::after{
+    content:''; position:absolute; inset:0; background:#fff; transform:translateX(-101%);
+    transition:transform .45s cubic-bezier(.65,0,.2,1); z-index:0;
+  }
+  .btn-primary span{position:relative; z-index:1;}
+  .btn-primary:hover::after{transform:translateX(0);}
+  .btn-primary:hover{transform:translateY(-2px);}
+  .btn-ghost{border:1px solid var(--line); color:var(--text);}
+  .btn-ghost:hover{border-color:var(--gold); color:var(--gold); transform:translateY(-2px);}
+
+  .hero-meta{
+    margin-top:90px; display:flex; gap:54px; flex-wrap:wrap;
+    padding-top:32px; border-top:1px solid var(--line);
+    opacity:0; animation:riseIn .9s ease forwards .95s;
+  }
+  .hero-meta div{font-family:var(--mono); font-size:.78rem; color:var(--muted); letter-spacing:.05em;}
+  .hero-meta strong{display:block; color:var(--text); font-family:var(--display); font-size:1.6rem; font-weight:400; letter-spacing:.04em; margin-bottom:4px;}
+
+  /* timecode */
+  .timecode{
+    position:absolute; top:130px; right:32px; font-family:var(--mono); font-size:.85rem;
+    color:var(--muted); letter-spacing:.12em; z-index:2; display:flex; align-items:center; gap:10px;
+  }
+  .timecode::before{content:'REC'; color:var(--rust); font-weight:700;}
+  @media(max-width:880px){.timecode{display:none;}}
+
+  /* ---------- SECTION HEADERS ---------- */
+  .section{padding:130px 0; position:relative;}
+  .section-tight{padding:100px 0;}
+  @media(max-width:768px){.section, .section-tight{padding:80px 0;}}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:18px; display:flex; align-items:center; gap:14px;
+  }
+  .eyebrow::before{content:''; width:36px; height:1px; background:var(--gold);}
+
+  .section-title{
+    font-family:var(--display); text-transform:uppercase; font-size:clamp(2.2rem,5.5vw,4.2rem);
+    line-height:1.04; letter-spacing:.01em; max-width:760px;
+  }
+  .section-sub{margin-top:22px; max-width:560px; color:var(--muted); font-size:1.02rem; line-height:1.8;}
+
+  .reveal{opacity:0; transform:translateY(36px); transition:opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1);}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* film strip divider */
+  .filmstrip{
+    height:34px; width:100%; overflow:hidden; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    background:var(--bg-soft);
+  }
+  .filmstrip-track{
+    display:flex; gap:14px; height:100%; align-items:center; width:max-content;
+    animation:scrollStrip 36s linear infinite;
+  }
+  .filmstrip-track div{
+    width:46px; height:24px; border:1px solid var(--line); border-radius:2px; flex:none; position:relative;
+  }
+  .filmstrip-track div::before, .filmstrip-track div::after{
+    content:''; position:absolute; width:5px; height:5px; background:var(--line); top:50%; transform:translateY(-50%);
+  }
+  .filmstrip-track div::before{left:-9px;}
+  .filmstrip-track div::after{right:-9px;}
+  @keyframes scrollStrip{from{transform:translateX(0);} to{transform:translateX(-50%);}}
+
+  /* ---------- ABOUT ---------- */
+  .about-grid{
+    display:grid; grid-template-columns:1.1fr 1fr; gap:80px; margin-top:70px; align-items:start;
+  }
+  @media(max-width:900px){.about-grid{grid-template-columns:1fr; gap:50px;}}
+  .about-text p{color:var(--muted); font-size:1.02rem; line-height:1.9; margin-bottom:22px;}
+  .about-text strong{color:var(--text); font-weight:600;}
+  .about-portrait{
+    position:relative; aspect-ratio:4/5; border:1px solid var(--line); border-radius:4px;
+    background:linear-gradient(155deg, var(--bg-card), #0d0d0f);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  /*.about-portrait::before{
+    content:'JA'; font-family:var(--display); font-size:9rem; color:var(--line); letter-spacing:.05em;
+  } */
+  .about-portrait img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    filter:brightness(1.05) contrast(1.1);
+  }
+  .about-portrait .corner{
+    position:absolute; width:26px; height:26px; border:1px solid var(--gold);
+  }
+  .about-portrait .c-tl{top:18px; left:18px; border-right:none; border-bottom:none;}
+  .about-portrait .c-br{bottom:18px; right:18px; border-left:none; border-top:none;}
+
+  .about-list{margin-top:30px; display:grid; gap:14px;}
+  .about-list li{
+    list-style:none; display:flex; align-items:center; gap:14px; font-size:.92rem; color:var(--text);
+    padding-bottom:14px; border-bottom:1px solid var(--line);
+  }
+  .about-list li::before{content:'›'; color:var(--gold); font-family:var(--display); font-size:1.1rem;}
+
+  /* ---------- SKILLS ---------- */
+  .skills-grid{margin-top:64px; display:grid; gap:28px 60px; grid-template-columns:1fr 1fr;}
+  @media(max-width:760px){.skills-grid{grid-template-columns:1fr;}}
+  .skill-row{}
+  .skill-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; font-size:.95rem;}
+  .skill-head span:last-child{font-family:var(--mono); color:var(--gold); font-size:.82rem;}
+  .skill-bar{height:3px; background:var(--line); position:relative; overflow:hidden; border-radius:2px;}
+  .skill-bar i{
+    position:absolute; left:0; top:0; bottom:0; width:0; background:linear-gradient(90deg, var(--gold), var(--rust));
+    transition:width 1.4s cubic-bezier(.2,.7,.2,1);
+  }
+  .skill-row.in .skill-bar i{width:var(--val);}
+
+  /* ---------- SERVICES ---------- */
+  .services-grid{
+    margin-top:64px; display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line);
+  }
+  @media(max-width:980px){.services-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:560px){.services-grid{grid-template-columns:1fr;}}
+  .service-card{
+    background:var(--bg); padding:38px 28px; transition:background .4s ease, transform .4s ease;
+    position:relative; min-height:200px; display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .service-card:hover{background:var(--bg-card); transform:translateY(-4px);}
+  .service-num{font-family:var(--mono); font-size:.78rem; color:var(--muted);}
+  .service-card h3{font-family:var(--display); font-size:1.35rem; text-transform:uppercase; font-weight:400; letter-spacing:.03em; margin-top:36px;}
+  .service-card p{margin-top:10px; font-size:.86rem; color:var(--muted); line-height:1.65;}
+
+  /* ---------- PORTFOLIO ---------- */
+  .filter-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:50px;}
+  .filter-btn{
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    padding:10px 20px; border:1px solid var(--line); border-radius:2px; color:var(--muted);
+    background:transparent; cursor:pointer; transition:all .3s ease;
+  }
+  .filter-btn:hover{color:var(--text); border-color:var(--gold);}
+  .filter-btn.active{background:var(--gold); color:#0a0a0b; border-color:var(--gold);}
+
+  .portfolio-grid{margin-top:36px; display:grid; grid-template-columns:repeat(3,1fr); gap:24px;}
+  @media(max-width:980px){.portfolio-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:640px){.portfolio-grid{grid-template-columns:1fr;}}
+  
+  .pf-video{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .pf-card{
+    position:relative; aspect-ratio:4/5; border-radius:4px; overflow:hidden; border:1px solid var(--line);
+    background:linear-gradient(155deg, var(--bg-card), #0d0d0f);
+    cursor:pointer; transition:transform .4s ease;
+  }
+  .pf-card:hover{transform:translateY(-6px);}
+  .pf-thumb{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-size:5.5rem; color:rgba(244,241,234,0.05); letter-spacing:.05em;
+    transition:transform .6s cubic-bezier(.2,.7,.2,1), color .4s ease;
+  }
+  .pf-card:hover .pf-thumb{transform:scale(1.08); color:rgba(214,164,76,0.10);}
+  .pf-overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:26px;
+    background:linear-gradient(0deg, rgba(0,0,0,.92) 5%, rgba(0,0,0,.1) 60%, transparent 100%);
+  }
+  .pf-tag{font-family:var(--mono); font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
+  .pf-overlay h3{font-family:var(--display); font-size:1.5rem; font-weight:400; text-transform:uppercase; letter-spacing:.02em;}
+  .pf-overlay p{margin-top:6px; font-size:.85rem; color:var(--muted);}
+  .pf-play{
+    position:absolute; top:22px; right:22px; width:46px; height:46px; border-radius:50%;
+    border:1px solid rgba(244,241,234,.25); display:flex; align-items:center; justify-content:center;
+    backdrop-filter:blur(6px); background:rgba(255,255,255,.04);
+    transition:background .35s ease, border-color .35s ease;
+  }
+  .pf-card:hover .pf-play{background:var(--gold); border-color:var(--gold);}
+  .pf-play svg{width:14px; height:14px; fill:var(--text); transition:fill .35s ease;}
+  .pf-card:hover .pf-play svg{fill:#0a0a0b;}
+
+  /* ---------- TIMELINE ---------- */
+  .timeline{margin-top:70px; position:relative;}
+  .timeline::before{
+    content:''; position:absolute; left:11px; top:6px; bottom:6px; width:1px; background:var(--line);
+  }
+  @media(min-width:760px){.timeline::before{left:50%; transform:translateX(-50%);}}
+  .tl-item{
+    position:relative; padding-left:46px; margin-bottom:56px;
+  }
+  .tl-item:last-child{margin-bottom:0;}
+  .tl-dot{
+    position:absolute; left:0; top:6px; width:24px; height:24px; border-radius:50%;
+    background:var(--bg); border:1px solid var(--gold); display:flex; align-items:center; justify-content:center;
+  }
+  .tl-dot::after{content:''; width:8px; height:8px; border-radius:50%; background:var(--gold);}
+  .tl-date{font-family:var(--mono); font-size:.78rem; color:var(--gold); letter-spacing:.12em; margin-bottom:8px; display:block;}
+  .tl-item h3{font-family:var(--display); font-size:1.5rem; text-transform:uppercase; font-weight:400; letter-spacing:.02em;}
+  .tl-item .tl-place{color:var(--muted); font-size:.88rem; margin-top:2px;}
+  .tl-item ul{margin-top:14px; padding-left:18px; color:var(--muted); font-size:.92rem; line-height:1.85;}
+
+  @media(min-width:760px){
+    .tl-item{padding-left:0; width:50%; padding-right:60px;}
+    .tl-item:nth-child(even){margin-left:50%; padding-right:0; padding-left:60px;}
+    .tl-dot{left:auto; right:-12px;}
+    .tl-item:nth-child(even) .tl-dot{left:-12px; right:auto;}
+    .tl-item:nth-child(even){text-align:left;}
+  }
+
+  /* ---------- TESTIMONIALS ---------- */
+  .testi-wrap{margin-top:64px; position:relative; max-width:760px;}
+  .testi-slide{
+    display:none; border:1px solid var(--line); border-radius:4px; padding:48px;
+    background:var(--bg-card);
+  }
+  .testi-slide.active{display:block; animation:fadeUp .6s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+  .testi-quote{font-family:var(--display); font-size:6rem; line-height:0; color:var(--gold); display:block; margin-bottom:14px;}
+  .testi-text{font-size:1.18rem; line-height:1.85; color:var(--text); font-weight:300;}
+  .testi-author{margin-top:30px; display:flex; align-items:center; gap:16px;}
+  .testi-avatar{
+    width:48px; height:48px; border-radius:50%; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:var(--display); color:var(--gold);
+  }
+  .testi-author strong{display:block; font-size:.95rem;}
+  .testi-author span{font-size:.8rem; color:var(--muted);}
+  .testi-controls{display:flex; gap:12px; margin-top:34px;}
+  .testi-controls button{
+    width:46px; height:46px; border-radius:50%; border:1px solid var(--line); background:transparent; color:var(--text);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .3s ease; font-size:1.1rem;
+  }
+  .testi-controls button:hover{border-color:var(--gold); color:var(--gold);}
+
+  /* ---------- STATS ---------- */
+  .stats-grid{
+    margin-top:0; display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line);
+  }
+  @media(max-width:760px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{background:var(--bg); padding:48px 28px; text-align:center;}
+  .stat-num{
+    font-family:var(--display); font-size:clamp(2.6rem,6vw,4rem); color:var(--gold); letter-spacing:.02em;
+  }
+  .stat-label{margin-top:10px; font-family:var(--mono); font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);}
+
+  /* ---------- CONTACT ---------- */
+  .contact-grid{display:grid; grid-template-columns:1fr 1.2fr; gap:80px; margin-top:64px;}
+  @media(max-width:900px){.contact-grid{grid-template-columns:1fr; gap:50px;}}
+  .contact-info p{color:var(--muted); line-height:1.85; font-size:1rem; margin-bottom:30px;}
+  .contact-detail{margin-bottom:24px;}
+  .contact-detail span{display:block; font-family:var(--mono); font-size:.74rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:6px;}
+  .contact-detail a, .contact-detail p{font-size:1.1rem;}
+
+  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media(max-width:560px){.form-row{grid-template-columns:1fr;}}
+  .field{margin-bottom:22px;}
+  .field label{
+    display:block; font-family:var(--mono); font-size:.74rem; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:10px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%; background:transparent; border:none; border-bottom:1px solid var(--line);
+    color:var(--text); font-family:var(--body); font-size:1rem; padding:10px 2px; transition:border-color .3s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--gold);}
+  .field select option{background:var(--bg-soft); color:var(--text);}
+  .field textarea{resize:vertical; min-height:110px;}
+  .submit-row{margin-top:8px;}
+  .form-note{margin-top:16px; font-size:.8rem; color:var(--muted); display:none;}
+  .form-note.show{display:block; color:var(--gold);}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line); padding:64px 0 32px;}
+  .footer-top{display:flex; justify-content:space-between; flex-wrap:wrap; gap:40px; padding-bottom:48px;}
+  .footer-brand .logo{margin-bottom:14px;}
+  .footer-brand p{color:var(--muted); max-width:320px; font-size:.92rem; line-height:1.7;}
+  .footer-cols{display:flex; gap:80px; flex-wrap:wrap;}
+  .footer-col span{
+    display:block; font-family:var(--mono); font-size:.74rem; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:18px;
+  }
+  .footer-col a{display:block; color:var(--muted); font-size:.92rem; margin-bottom:12px; transition:color .3s ease;}
+  .footer-col a:hover{color:var(--text);}
+  .footer-bottom{
+    border-top:1px solid var(--line); padding-top:28px; display:flex; justify-content:space-between;
+    flex-wrap:wrap; gap:14px; font-size:.8rem; color:var(--muted); font-family:var(--mono);
+  }
+
+  /* back to top */
+  .to-top{
+    position:fixed; bottom:28px; right:28px; width:48px; height:48px; border-radius:50%;
+    border:1px solid var(--line); background:rgba(10,10,11,.7); backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:600;
+    opacity:0; pointer-events:none; transition:all .35s ease;
+  }
+  .to-top.show{opacity:1; pointer-events:all;}
+  .to-top:hover{border-color:var(--gold); transform:translateY(-3px);}
+  .to-top svg{width:16px; height:16px; stroke:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="letterbox top"></div>
+<div class="letterbox bottom"></div>
+<div class="grain"></div>
+
+<!-- ================= HEADER ================= -->
+<header id="header">
+  <div class="wrap">
+    <nav>
+      <a href="#" class="logo">JEEVA<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#testimonials">Testimonials</a></li>
+        <li class="nav-cta-mobile"><a href="#contact" class="nav-cta">Start a Project</a></li>
+      </ul>
+      <a href="#contact" class="nav-cta" style="display:inline-block;">Start a Project</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-reel"></div>
+  <div class="timecode" id="timecode">00:00:00:00</div>
+  <div class="wrap hero-content">
+    <div class="hero-eyebrow"><span class="dot"></span> Video Editor — Erode &amp; Coimbatore, Tamil Nadu</div>
+    <h1>
+      <span class="line"><span>Jeeva A</span></span>
+      <span class="line"><span>Edits Stories</span></span>
+    </h1>
+    <p class="hero-tagline">
+      I cut footage into feeling — fast-paced reels, brand films, and YouTube content
+      built frame by frame for retention, emotion, and impact.
+    </p>
+    <div class="hero-actions">
+      <a href="#work" class="btn btn-primary"><span>View Showreel</span></a>
+      <a href="#contact" class="btn btn-ghost">Let's Talk →</a>
+    </div>
+    <div class="hero-meta">
+      <div><strong>2+</strong>Years Editing</div>
+      <div><strong>20+</strong>Projects Delivered</div>
+      <div><strong>3</strong>Core NLEs</div>
+      <div><strong>2</strong>Studios Worked With</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section class="section" id="about">
+  <div class="wrap">
+    <div class="eyebrow">01 — About</div>
+    <h2 class="section-title reveal">Cutting frames is technical.<br>Telling a story is everything.</h2>
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p>
+          I'm <strong>Jeeva A</strong>, a video editor based in Tamil Nadu working with brands, agencies, and creators
+          to turn raw footage into content people actually stop scrolling for. My work spans
+          <strong>short-form reels, long-form YouTube videos, and wellness &amp; brand campaigns</strong> — always with
+          an eye on pacing, rhythm, and the small details that make an edit feel premium.
+        </p>
+        <p>
+          My journey started with hands-on videography — managing framing, lighting, and sound on set —
+          before moving fully into the edit suite. That on-set experience shapes how I cut: I think about
+          coverage, intention, and story before I think about transitions.
+        </p>
+        <p>
+          At <strong>Genie Magnet</strong> and <strong>Mindei</strong>, I've edited everything from fast social
+          reels to full campaign series, working in <strong>CapCut, DaVinci Resolve, and Canva</strong>, with
+          a growing focus on motion graphics and color grading using Adobe's creative suite.
+        </p>
+        <ul class="about-list">
+          <li>Storytelling-first editing approach, built on real on-set experience</li>
+          <li>Fast turnaround without compromising visual quality</li>
+          <li>Platform-optimized exports for Instagram, YouTube &amp; client delivery</li>
+          <li>Comfortable collaborating directly with marketing &amp; creative teams</li>
+        </ul>
+      </div>
+      <div class="about-portrait reveal">
+        <img src="/j2.png" alt="Jeeva">
+        <div class="corner c-tl"></div>
+        <div class="corner c-br"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="filmstrip"><div class="filmstrip-track" id="filmTrack"></div></div>
+
+<!-- ================= SKILLS ================= -->
+<section class="section" id="skills">
+  <div class="wrap">
+    <div class="eyebrow">02 — Skills</div>
+    <h2 class="section-title reveal">Tools of the edit.</h2>
+    <p class="section-sub reveal">A working toolkit built around speed, polish, and platform-ready output —
+      sharpened daily across client and brand work.</p>
+
+    <div class="skills-grid">
+      <div class="skill-row reveal" style="--val:98%"><div class="skill-head"><span>Capcut</span><span>98%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:90%"><div class="skill-head"><span>Video shoot</span><span>90%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:90%"><div class="skill-head"><span>Lighting Setup</span><span>90%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:95%"><div class="skill-head"><span>DaVinci Resolve</span><span>95%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:65%"><div class="skill-head"><span>Fusion</span><span>65%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:85%"><div class="skill-head"><span>Color Grading</span><span>85%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:80%"><div class="skill-head"><span>Sound Design &amp; Syncing</span><span>80%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:92%"><div class="skill-head"><span>Social Media Content Editing</span><span>92%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:90%"><div class="skill-head"><span>YouTube Video Editing</span><span>90%</span></div><div class="skill-bar"><i></i></div></div>
+      <div class="skill-row reveal" style="--val:90%"><div class="skill-head"><span>Commercial / Brand Editing</span><span>90%</span></div><div class="skill-bar"><i></i></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SERVICES ================= -->
+<section class="section section-tight" id="services" style="background:var(--bg-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="eyebrow">03 — Services</div>
+    <h2 class="section-title reveal">What I bring to your project.</h2>
+    <p class="section-sub reveal">From a single reel to a full content series — every edit is built around your
+      platform, audience, and goal.</p>
+
+    <div class="services-grid">
+      <div class="service-card reveal"><span class="service-num">01</span><h3>Video Editing</h3><p>Full-cycle editing from raw footage to a polished, story-driven final cut.</p></div>
+      <div class="service-card reveal"><span class="service-num">02</span><h3>Reels Editing</h3><p>Punchy, trend-aware short-form edits built for Instagram &amp; short video.</p></div>
+      <div class="service-card reveal"><span class="service-num">03</span><h3>YouTube Editing</h3><p>Long-form pacing, retention-focused cuts, and chapter-ready structure.</p></div>
+      <div class="service-card reveal"><span class="service-num">04</span><h3>Motion Graphics</h3><p>Animated text and transitions.</p></div>
+      <div class="service-card reveal"><span class="service-num">05</span><h3>Color Correction</h3><p>Consistent, brand-true color grading across every shot and scene.</p></div>
+      <div class="service-card reveal"><span class="service-num">06</span><h3>Corporate Videos</h3><p>Clean, professional edits for internal, brand, and explainer content.</p></div>
+      <div class="service-card reveal"><span class="service-num">07</span><h3>Promotional Videos</h3><p>High-energy promos engineered to boost visibility and conversions.</p></div>
+      <div class="service-card reveal"><span class="service-num">08</span><h3>Thumbnail Design</h3><p>Scroll-stopping thumbnails designed to lift click-through rate.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PORTFOLIO ================= -->
+<section class="section" id="work">
+  <div class="wrap">
+    <div class="eyebrow">04 — Selected Work</div>
+    <h2 class="section-title reveal">Edits that earned their watch time.</h2>
+    <p class="section-sub reveal">A selection of reels, series, and promos delivered for client projects across
+      wellness, lifestyle, and brand campaigns.</p>
+
+    <div class="filter-row reveal">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="reels">Reels</button>
+      <button class="filter-btn" data-filter="youtube">YouTube</button>
+      <button class="filter-btn" data-filter="brand">Brand / Promo</button>
+    </div>
+
+    <div class="portfolio-grid" id="pfGrid">
+      <div class="pf-card reveal" data-cat="reels">
+        <div class="pf-thumb">01</div>
+        <video autoplay muted loop playsinline class="pf-video">
+            <source src="https://res.cloudinary.com/dhnknolyn/video/upload/v1781204405/v1_dfqihn.mp4" type="video/mp4">
+        </video>
+        <div class="pf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="pf-overlay"><span class="pf-tag">Instagram Reels</span><h3>Wellness Reel Series</h3><p>Dr.Nanthini — Motivation & Mental wellbeing campaign edit</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="youtube">
+        <div class="pf-thumb">02</div>
+        <video autoplay muted loop playsinline class="pf-video">
+            <source src="https://res.cloudinary.com/dhnknolyn/video/upload/v1781204430/v2_mr5y9a.mp4" type="video/mp4">
+        </video>
+        <div class="pf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="pf-overlay"><span class="pf-tag">YouTube</span><h3>Long-Form Video Series</h3><p>Full episode series — pacing, audience engaging.</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="brand">
+        <div class="pf-thumb">03</div>
+        <video autoplay muted loop playsinline class="pf-video">
+            <source src="https://res.cloudinary.com/dhnknolyn/video/upload/v1781204433/v3_pmrk9t.mp4" type="video/mp4">
+        </video>
+        <div class="pf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="pf-overlay"><span class="pf-tag">Promo</span><h3>Marketing Promo Video</h3><p>Genie Magnet — boosted visibility &amp; retention</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="reels">
+        <div class="pf-thumb">04</div>
+        <video autoplay muted loop playsinline class="pf-video">
+            <source src="https://res.cloudinary.com/dhnknolyn/video/upload/v1781204439/v4_huepmc.mp4" type="video/mp4">
+        </video>
+        <div class="pf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="pf-overlay"><span class="pf-tag">Short-Form</span><h3>Brand Social Reels</h3><p>Myfood Myprice — engagement-driven edits</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="brand">
+        <div class="pf-thumb">05</div>
+        <video autoplay muted loop playsinline class="pf-video">
+            <source src="https://res.cloudinary.com/dhnknolyn/video/upload/v1781204455/v5_mwpqp3.mp4" type="video/mp4">
+        </video>
+        <div class="pf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="pf-overlay"><span class="pf-tag">Color &amp; Grade</span><h3>Color Grading</h3><p>Color correction &amp; visual effects pass</p></div>
+      </div>
+      <div class="pf-card reveal" data-cat="youtube">
+        <div class="pf-thumb">06</div>
+        <video autoplay muted loop playsinline class="pf-video">
+            <source src="https://res.cloudinary.com/dhnknolyn/video/upload/v1781204425/v6_hf5rr2.mp4" type="video/mp4">
+        </video>
+        <div class="pf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="pf-overlay"><span class="pf-tag">Educational</span><h3>Campaign Video Series</h3><p>Educational content — Create awareness & Encourage people to take a action</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EXPERIENCE TIMELINE ================= -->
+<section class="section section-tight" id="experience" style="background:var(--bg-soft); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="eyebrow">05 — Experience</div>
+    <h2 class="section-title reveal">Where the work happened.</h2>
+
+    <div class="timeline">
+      <div class="tl-item reveal">
+        <div class="tl-dot"></div>
+        <span class="tl-date">May 2024 — Dec 2025</span>
+        <h3>Video Editor</h3>
+        <p class="tl-place">Genie Magnet, Erode, Tamil Nadu</p>
+        <ul>
+          <li>Edited short-form &amp; long-form content for Reels, YouTube, and educational campaigns</li>
+          <li>Supported brand-building and marketing through consistent, polished edits</li>
+          <li>Assisted on-set with framing, lighting, and sound</li>
+          <li>Handled fast turnarounds, client feedback &amp; versioning</li>
+        </ul>
+      </div>
+      <div class="tl-item reveal">
+        <div class="tl-dot"></div>
+        <span class="tl-date">Nov 2025 — Apr 2026</span>
+        <h3>Video Editor</h3>
+        <p class="tl-place">Mindei, Coimbatore, Tamil Nadu</p>
+        <ul>
+          <li>Produced video content for mental wellbeing &amp; wellness campaigns using Canva, CapCut &amp; DaVinci Resolve</li>
+          <li>Created short-form &amp; promotional videos for Instagram, YouTube and digital marketing</li>
+          <li>Added transitions, subtitles, music sync, motion graphics, color correction &amp; VFX</li>
+          <li>Optimized formats &amp; resolutions across platforms for mobile-friendly viewing</li>
+        </ul>
+      </div>
+      <div class="tl-item reveal">
+        <div class="tl-dot"></div>
+        <span class="tl-date">Ongoing</span>
+        <h3>Freelance &amp; Client Projects</h3>
+        <p class="tl-place">Remote — Tamil Nadu &amp; Beyond</p>
+        <ul>
+          <li>Edited social reels &amp; brand videos with strong online engagement</li>
+          <li>Managed full Instagram/YouTube series — editing, pacing &amp; text overlays</li>
+          <li>Produced marketing promos that boosted visibility &amp; viewer retention</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TESTIMONIALS ================= -->
+<section class="section" id="testimonials">
+  <div class="wrap">
+    <div class="eyebrow">06 — Testimonials</div>
+    <h2 class="section-title reveal">Words from the people I've worked with.</h2>
+
+    <div class="testi-wrap reveal">
+      <div class="testi-slide active">
+        <span class="testi-quote">“</span>
+        <p class="testi-text">Jeeva turned hours of raw footage into reels that actually performed.
+          The pacing and transitions felt premium without ever feeling over-produced — exactly what
+          our campaign needed.</p>
+        <div class="testi-author">
+          <div class="testi-avatar">M</div>
+          <div><strong>Creative Lead</strong><span>Mindei — Wellness Campaign</span></div>
+        </div>
+      </div>
+      <div class="testi-slide">
+        <span class="testi-quote">“</span>
+        <p class="testi-text">Reliable, fast, and genuinely thoughtful about storytelling. Jeeva handled
+          revisions calmly and always delivered on time, even with tight client deadlines.</p>
+        <div class="testi-author">
+          <div class="testi-avatar">G</div>
+          <div><strong>Marketing Manager</strong><span>Genie Magnet</span></div>
+        </div>
+      </div>
+      <div class="testi-slide">
+        <span class="testi-quote">“</span>
+        <p class="testi-text">Our YouTube series finally had a consistent voice — the cuts, captions,
+          and music sync made every episode feel professional from the first frame.</p>
+        <div class="testi-author">
+          <div class="testi-avatar">C</div>
+          <div><strong>Project Owner</strong><span>Client Project — YouTube Series</span></div>
+        </div>
+      </div>
+      <div class="testi-controls">
+        <button id="testiPrev" aria-label="Previous testimonial">←</button>
+        <button id="testiNext" aria-label="Next testimonial">→</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATS ================= -->
+<section style="border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="stats-grid">
+    <div class="stat-card reveal"><div class="stat-num" data-count="20">0</div><div class="stat-label">Projects Completed</div></div>
+    <div class="stat-card reveal"><div class="stat-num" data-count="12">0</div><div class="stat-label">Happy Clients</div></div>
+    <div class="stat-card reveal"><div class="stat-num" data-count="60">0</div><div class="stat-label">Videos Delivered</div></div>
+    <div class="stat-card reveal"><div class="stat-num" data-count="2">0</div><div class="stat-label">Years Of Experience</div></div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section class="section" id="contact">
+  <div class="wrap">
+    <div class="eyebrow">07 — Contact</div>
+    <h2 class="section-title reveal">Got a project in mind? Let's cut something great.</h2>
+
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <p>Whether it's a single reel, a full campaign series, or ongoing editing support — I'm happy
+          to talk through your project and timeline.</p>
+
+        <div class="contact-detail">
+          <span>Email</span>
+          <a href="mailto:jeevaaa2000@gmail.com">jeevaaa2000@gmail.com</a>
+        </div>
+        <div class="contact-detail">
+          <span>Phone / WhatsApp</span>
+          <a href="tel:+918667822334">+91 86678 22334</a>
+        </div>
+        <div class="contact-detail">
+          <span>LinkedIn</span>
+          <a href="https://www.linkedin.com/in/jeeva4520" target="_blank" rel="noopener">linkedin.com/in/jeeva4520</a>
+        </div>
+        <div class="contact-detail">
+          <span>Based In</span>
+          <p style="font-size:1.05rem;">Tamil Nadu, India</p>
+        </div>
+      </div>
+
+      <form action="https://formsubmit.co/jeevaaa2000@gmail.com" method="POST">
+        <div class="form-row">
+          <div class="field">
+            <label for="cf-name">Name</label>
+            <input type="text" id="cf-name" name="name" required>
+          </div>
+          <div class="field">
+            <label for="cf-email">Email</label>
+            <input type="email" id="cf-email" name="email" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="cf-type">Project Type</label>
+          <select id="cf-type" name="type">
+            <option>Social Media Reels</option>
+            <option>YouTube Video Editing</option>
+            <option>Brand / Promotional Video</option>
+            <option>Color Grading</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cf-message">Message</label>
+          <textarea id="cf-message" name="message" required placeholder="Tell me a bit about your project..."></textarea>
+        </div>
+        <div class="submit-row">
+          <button type="submit" class="btn btn-primary"><span>Send Message</span></button>
+        </div>
+        <p class="form-note" id="formNote">Thanks — your message has been noted. I'll get back to you soon.</p>
+        <input type="hidden" name="_subject" value="New Portfolio Enquiry">
+        <input type="hidden" name="_captcha" value="false">
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="logo">JEEVA<span>.</span></a>
+        <p>Video editor crafting cinematic, story-led content for brands, creators, and agencies.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <span>Navigate</span>
+          <a href="#about">About</a>
+          <a href="#services">Services</a>
+          <a href="#work">Work</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <div class="footer-col">
+          <span>Connect</span>
+          <a href="https://www.linkedin.com/in/jeeva4520" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="mailto:jeevaaa2000@gmail.com">Email</a>
+          <a href="tel:+918667822334">Phone</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Jeeva A. All rights reserved.</span>
+      <span>Designed for the edit.</span>
+    </div>
+  </div>
+</footer>
+
+<div class="to-top" id="toTop" role="button" aria-label="Back to top" tabindex="0">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</div>
+
+<script>
+  // Loaded state -> open letterbox
+  window.addEventListener('load', () => {
+    requestAnimationFrame(() => document.body.classList.add('loaded'));
+  });
+
+  // Header scroll state
+  const header = document.getElementById('header');
+  const toTop = document.getElementById('toTop');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 40);
+    toTop.classList.toggle('show', window.scrollY > 600);
+  });
+  toTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+  // Mobile nav
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:0.15});
+  revealEls.forEach(el => io.observe(el));
+
+  // Skill bars (separate observer because of .in toggle on row)
+  document.querySelectorAll('.skill-row').forEach(el => io.observe(el));
+
+  // Filmstrip generation
+  const track = document.getElementById('filmTrack');
+  for(let i=0;i<60;i++){ const d=document.createElement('div'); track.appendChild(d); }
+
+  // Timecode ticking
+  const tc = document.getElementById('timecode');
+  let frame=0,sec=0,min=0,hr=0;
+  setInterval(() => {
+    frame++;
+    if(frame>=24){frame=0; sec++;}
+    if(sec>=60){sec=0; min++;}
+    if(min>=60){min=0; hr++;}
+    const p=n=>String(n).padStart(2,'0');
+    tc.textContent = `${p(hr)}:${p(min)}:${p(sec)}:${p(frame)}`;
+  }, 1000/24);
+
+  // Portfolio filter
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const pfCards = document.querySelectorAll('.pf-card');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      pfCards.forEach(card => {
+        const show = f==='all' || card.dataset.cat===f;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  // Testimonial slider
+  const slides = document.querySelectorAll('.testi-slide');
+  let testiIdx = 0;
+  function showSlide(i){
+    slides.forEach(s=>s.classList.remove('active'));
+    testiIdx = (i+slides.length)%slides.length;
+    slides[testiIdx].classList.add('active');
+  }
+  document.getElementById('testiNext').addEventListener('click', ()=>showSlide(testiIdx+1));
+  document.getElementById('testiPrev').addEventListener('click', ()=>showSlide(testiIdx-1));
+  setInterval(()=>showSlide(testiIdx+1), 7000);
+
+  // Animated counters
+  const stats = document.querySelectorAll('.stat-num');
+  const statIO = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const el = entry.target;
+        const target = parseInt(el.dataset.count,10);
+        let cur = 0;
+        const step = Math.max(1, Math.round(target/60));
+        const tick = ()=>{
+          cur += step;
+          if(cur>=target){ el.textContent = target + (target>=10?'+':''); return; }
+          el.textContent = cur;
+          requestAnimationFrame(tick);
+        };
+        tick();
+        statIO.unobserve(el);
+      }
+    });
+  },{threshold:0.4});
+  stats.forEach(s=>statIO.observe(s));
+
+  // Contact form (no backend — show confirmation)
+  /* const form = document.getElementById('contactForm');
+  const note = document.getElementById('formNote');
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    note.classList.add('show');
+    form.reset(); 
+    setTimeout(()=>note.classList.remove('show'), 5000); 
+  }); */
+</script>
+</body>
+</html>
